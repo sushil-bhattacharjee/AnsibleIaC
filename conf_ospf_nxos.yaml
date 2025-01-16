@@ -1,0 +1,28 @@
+- name: Configure OSPF on NX-OS
+  hosts: SW2NXOS
+  gather_facts: no
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+    ansible_become: yes
+    ospf_process_id: 1
+    ospf_area: 0
+    ospf_networks:
+      - { address: 22.22.22.22/32, wildcard_bits: 0.0.0.0 }
+      - { address: 10.1.10.22/24, wildcard_bits: 0.0.0.255 }
+
+  tasks:
+    - name: Configure OSPF
+      cisco.nxos.nxos_ospfv2:
+        config:
+          processes:
+            - process_id: "{{ ospf_process_id }}"
+              router_id: 22.22.22.22
+              areas:
+                - area_id: "{{ ospf_area }}"
+                  ranges:
+                    - prefix: 22.22.22.22/32
+                      cost: 10
+                    - prefix: 10.1.10.22/32
+                      not_advertise: true
+        state: merged

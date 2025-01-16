@@ -1,0 +1,37 @@
+all:
+  vars:
+    ansible_connection: ansible.netcommon.network_cli
+    ansible_become: yes
+    ansible_become_method: enable
+    ansible_user: cisco
+    ansible_password: "{{ device_password }}"
+
+  children:
+    infra:
+      hosts:
+        R1:
+          ansible_host: 10.1.10.11
+          ansible_network_os: cisco.ios.ios
+        R2:
+          ansible_host: 10.1.10.12
+          ansible_network_os: cisco.ios.ios
+        R3:
+          ansible_host: 10.1.10.13
+          ansible_network_os: cisco.ios.ios
+        R5:
+          ansible_host: 10.1.10.15
+          ansible_network_os: cisco.ios.ios
+        R6:
+          ansible_host: 10.1.10.16
+          ansible_network_os: cisco.ios.ios
+        SW2NXOS:
+          ansible_host: 10.1.10.22
+          ansible_network_os: cisco.nxos.nxos
+          ansible_connection: network_cli
+          ansible_become: yes
+          ansible_ssh_pass: "{{ device_password }}"
+          ansible_ssh_common_args: '-o PubkeyAuthentication=no'
+
+
+
+

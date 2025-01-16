@@ -1,0 +1,38 @@
+---
+
+- name: Create output directory
+  hosts: SW2NXOS
+  gather_facts: no
+
+
+  tasks:
+    - name: Create directory 
+      file:
+        path: ./job-output 
+        state: directory 
+
+    - name: Capture show output 
+      cisco.nxos.nxos_command:
+        commands:
+          - show version 
+          - show ip route vrf default
+          - show ip route vrf management
+          - show mac address-table
+          - show vlan brief 
+      register: showcmds 
+
+    - name: Save show commands output to local directory
+      copy: 
+        content: "{{ showcmds.stdout | replace('\\n','\n') }}"
+        dest: "job-output/{{ inventory_hostname }}.out"
+
+    - name: Get running-config as JSON 
+      cisco.nxos.nxos_command:
+        commands:
+        - show run | json-pretty
+      register: config 
+
+    - name: Save running-config JSON to local directory 
+      copy:
+        content: "{{ config.stdout | replace('\\n','\n') }}"
+        dest: "job-output/{{ inventory_hostname }}-config.json"

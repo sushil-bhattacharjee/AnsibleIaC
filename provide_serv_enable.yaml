@@ -1,0 +1,20 @@
+---
+# Playbook to enable BGP, OSPF, RESTCONF, and NETCONF features
+- name: Enable BGP, OSPF, RESTCONF, and NETCONF on NX-OS
+  hosts: SW2NXOS
+  gather_facts: no
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+    ansible_become: yes
+
+  tasks:
+    - name: Enable features
+      cisco.nxos.nxos_feature:
+        feature: "{{ item }}"
+        state: enabled
+      with_items:
+        - bgp
+        - ospf
+        - restconf
+        - netconf

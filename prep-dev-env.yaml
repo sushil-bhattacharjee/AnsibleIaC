@@ -1,0 +1,33 @@
+---
+- name: Prep Development Environment 
+  hosts: SW2NXOS
+  gather_facts: no
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos 
+    ansible_become: no
+    dev_vlans:
+      - { vlan_id: 1000, name: Dev1 }
+      - { vlan_id: 1001, name: Dev2 }
+
+  tasks:
+    - name: Get Nexus facts 
+      cisco.nxos.nxos_facts:
+        gather_subset: legacy
+      register: data
+
+    - name: Create Dev VLANs, if VLAN 200 is missing
+      cisco.nxos.nxos_vlans:
+        config:
+          - vlan_id: "{{ item.vlan_id }}"
+            name: "{{ item.name }}"
+        state: merged
+      with_items: "{{ dev_vlans }}"
+      when: ("200") not in data.ansible_facts.ansible_net_vlan_list
+
+    - name: Create MOTD banner message
+      cisco.nxos.nxos_banner:
+        banner: motd 
+        text: |
+          Welcome to James Bond World!!
+        state: present 

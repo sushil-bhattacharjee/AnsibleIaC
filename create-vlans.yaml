@@ -1,0 +1,22 @@
+---
+- name: Create VLANs
+  hosts: SW2NXOS
+  gather_facts: false
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+    ansible_become: false
+
+  tasks:
+    - name: Merge provided configuration with device configuration.
+      cisco.nxos.nxos_vlans:
+        config:
+          - vlan_id: 100
+            name: Production
+          - vlan_id: 200
+            name: Site_backup
+          - vlan_id: 300
+            name: Development
+        state: merged
+
+

@@ -1,0 +1,17 @@
+---
+# Playbook to configure Loopback interface in NXOS
+- name: Configure Loopback Interface on NX-OS 
+  hosts: SW2NXOS
+  gather_facts: no
+  vars:
+    loopbacks:
+      - { interface: loopback0, addr: 22.22.22.22, mask: 32 }
+      - { interface: loopback1, add: 221.221.221.221, mask: 32 }
+
+  tasks:
+    - name: Add Loopback 22.22.22.22
+      cisco.nxos.nxos_interfaces:
+        config:
+          - name: "{{ item.interface }}"
+            enabled: true
+      loop: "{{ loopbacks }}"

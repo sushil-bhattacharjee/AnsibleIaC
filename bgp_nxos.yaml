@@ -1,0 +1,31 @@
+---
+# Playbook to configure BGP
+- name: Configure BGP for Cisco NEXUS-OS
+  hosts: SW2NXOS
+  gather_facts: no
+
+  tasks: 
+    - name: CONFIGURE BGP ASN and ROUTER ID 
+      cisco.nxos.nxos_bgp_global:
+        config: 
+          as_number: "{{ asn }}"
+          router_id: "{{ router_id }}"
+          neighbors: 
+          - neighbor_address: "{{ item.neighbor }}"
+            remote_as: "{{ item.remote_as }}"
+            update_source: "{{ item.update_source }}"
+        state: merged 
+      loop: "{{ bgp_neighbors }}"  # Fixed loop syntax
+
+    - name: CONFIGURE BGP NEIGHBORS 
+      cisco.nxos.nxos_bgp_neighbor_address_family:
+        config: 
+          as_number: "{{ asn }}"
+          neighbors:
+          - neighbor_address: "{{ item.neighbor }}"
+            address_family: 
+            - afi: ipv4 
+              safi: unicast 
+              send_community: 
+                both: true 
+      loop: "{{ bgp_neighbors }}"  # Fixed loop syntax

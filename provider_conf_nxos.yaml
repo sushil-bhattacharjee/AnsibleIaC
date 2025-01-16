@@ -1,0 +1,71 @@
+---
+- name: Configure BGP, OSPF, RESTCONF, and NETCONF on NX-OS
+  hosts: SW2NXOS
+  gather_facts: no
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: nxos
+    ansible_become: yes
+    bgp_as: 65000
+    bgp_neighbors:
+      - { id: 5.5.5.5, remote_as: 65077 }
+      - { id: 6.6.6.6, remote_as: 65005 }
+    ospf_process_id: 1
+    ospf_area: 0
+    ospf_networks:
+      - { address: 22.22.22.22/32, wildcard_bits: 0.0.0.0 }
+      - { address: 10.1.10.22/24, wildcard_bits: 0.0.0.255 }
+
+  tasks:
+    - name: Add loopback address 22.22.22.22
+      cisco.nxos.nxos_interface:
+        name: Loopback0
+        ip_address: 22.22.22.22
+        state: present
+      register: loopback_result
+
+    - name: Ensure loopback is configured before BGP and OSPF
+      debug:
+        msg: "Loopback0 configured successfully: {{ loopback_result }}"
+      when: loopback_result is defined and loopback_result.changed
+
+    - name: Enable BGP, OSPF, RESTCONF, and NETCONF features
+      nxos_feature:
+        feature: "{{ item }}"
+        state: enabled
+      with_items:
+        - bgp
+        - ospf
+        - restconf
+        - netconf
+
+    - name: Configure BGP
+      cisco.nxos.nxos_bgp:
+        as_number: "{{ bgp_as }}"
+        neighbor:
+          - id: 5.5.5.5
+            remote_as: 65077
+            update_source: Loopback0
+          - id: 6.6.6.6
+            remote_as: 65005
+            update_source: Loopback0
+        router_id: 1.1.1.1
+        state: present
+
+    - name: Configure OSPF
+      cisco.nxos.nxos_ospf:
+        config:
+          - process_id: "{{ ospf_process_id }}"
+            router_id: 2.2.2.2
+            areas:
+              - id: "{{ ospf_area }}"
+                networks:
+                  - address: 22.22.22.22
+                    wildcard_bits: 0.0.0.0
+                  - address: 10.1.10.22
+                    wildcard_bits: 0.0.0.255
+        state: merged
+
+    - name: Verify RESTCONF and NETCONF are enabled
+      debug:
+        msg: "Ensure RESTCONF and NETCONF are accessible on the device."
